@@ -1,0 +1,66 @@
+name: RetroScreensavers
+
+options:
+  deploymentTarget:
+    macOS: "14.0"
+
+settings:
+  base:
+    # Change to a reverse-DNS prefix you own before publishing. Every bundle identifier is
+    # derived from it (Savers/Pipes → local.retroscreensaver.pipes), and so is where each
+    # saver stores its settings.
+    BUNDLE_ID_PREFIX: local.retroscreensaver
+    PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).$(TARGET_NAME:lower)
+    SWIFT_VERSION: "5.0"
+    # Ad-hoc signing is enough to run locally; distribution needs a Developer ID + notarization.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+
+targetTemplates:
+  # A screen saver bundle built from Savers/<target name>, e.g. Savers/Pipes → RetroPipes.saver.
+  ScreenSaver:
+    type: bundle
+    platform: macOS
+    sources:
+      - Shared/Common
+      - Savers/${target_name}/Sources
+      - path: Savers/${target_name}/Resources
+        buildPhase: resources
+        optional: true
+    settings:
+      base:
+        PRODUCT_NAME: Retro${target_name}
+        WRAPPER_EXTENSION: saver
+        INFOPLIST_FILE: Savers/${target_name}/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        # System Settings looks for thumbnail.png / thumbnail@2x.png, not a combined TIFF.
+        COMBINE_HIDPI_IMAGES: NO
+    scheme: {}
+
+  # A saver's test app: the shared harness plus that saver's code. Needs templateAttributes.saver.
+  Harness:
+    type: application
+    platform: macOS
+    sources:
+      - Shared/Common
+      - Shared/Harness
+      - Savers/${saver}/Sources
+      - Savers/${saver}/Harness
+    settings:
+      base:
+        PRODUCT_NAME: Retro${saver}Harness
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ${saver} Harness
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+    scheme: {}
+
+targets:
+  Pipes:
+    templates: [ScreenSaver]
+  PipesHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: Pipes
