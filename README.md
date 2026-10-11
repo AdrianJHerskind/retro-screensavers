@@ -12,17 +12,30 @@ A collection of macOS screen savers recreating classics from the 90s. Each one i
 
 Requires macOS 14 Sonoma or later, on Apple Silicon or Intel.
 
-1. Download a saver, e.g. `RetroPipes.saver.zip`, from the [latest release](https://github.com/AdrianJHerskind/retro-screensavers/releases/latest) and unzip it. Safari usually unzips it for you.
-2. The savers aren't notarized by Apple, so macOS blocks them when they're downloaded. To allow it, run this once in Terminal (adjust the path if you unzipped it somewhere other than Downloads):
+Paste this into Terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AdrianJHerskind/retro-screensavers/main/install.sh | bash
+```
+
+It downloads the [latest release](https://github.com/AdrianJHerskind/retro-screensavers/releases/latest), installs every saver into your `~/Library/Screen Savers`, and opens System Settings → Screen Saver, where they're listed under **Other**, at the bottom. **Options…** opens a saver's settings. It doesn't need your password, and macOS doesn't block the savers this way even though they aren't notarized. Feel free to [read the script](install.sh) first. To install only some savers, or to uninstall them all:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AdrianJHerskind/retro-screensavers/main/install.sh | bash -s -- Pipes Text3D
+```
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AdrianJHerskind/retro-screensavers/main/install.sh | bash -s -- --uninstall
+```
+
+### Installing by hand
+
+1. Download `RetroScreensavers.zip` from the [latest release](https://github.com/AdrianJHerskind/retro-screensavers/releases/latest) and unzip it. Safari usually unzips it for you.
+2. The savers aren't notarized by Apple, so macOS blocks them when they're downloaded. To allow them, run this once in Terminal (adjust the path if the folder isn't in Downloads):
    ```bash
-   xattr -dr com.apple.quarantine ~/Downloads/RetroPipes.saver
+   xattr -dr com.apple.quarantine ~/Downloads/"Retro Screensavers"
    ```
-3. Double-click `RetroPipes.saver` and choose to install it.
-4. Pick it in System Settings → Screen Saver. Third-party savers are listed under **Other**, at the bottom. **Options…** opens its settings.
-
-If you installed it before step 2, run the command on the installed copy instead: `xattr -dr com.apple.quarantine ~/Library/Screen\ Savers/RetroPipes.saver`.
-
-To uninstall, delete it from `~/Library/Screen Savers`.
+3. Double-click each saver you want in the "Retro Screensavers" folder, and choose to install it.
 
 ## Building from source
 
@@ -32,7 +45,7 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
 | --- | --- |
 | `make install` | Builds every saver (Release) and copies them to `~/Library/Screen Savers`. Then pick one in System Settings → Screen Saver. Local builds aren't blocked, so there's no `xattr` step. |
 | `make uninstall` | Removes them again. |
-| `make dist` | Builds every saver and zips each one into `dist/`, ready to attach to a GitHub release. |
+| `make dist` | Builds every saver into one `dist/RetroScreensavers.zip`, ready to attach to a GitHub release. `install.sh` downloads it from the latest release. |
 | `make run SAVER=Pipes` | Opens a saver's test app, which shows it in a normal window (⌘, for options, ⌃⌘F for full screen). It's an optimized build, so it performs like the real saver; to use the debugger, run the `<Name>Harness` scheme from Xcode. Saver-specific flags go in `ARGS`. |
 | `make snapshot SAVER=Pipes ARGS="--time 30"` | Renders one frame offscreen to `build/snapshot.png`; also takes `--size WxH` and `--seed n`. |
 | `make thumbnails SAVER=Pipes` | Regenerates the saver's System Settings tile in `Savers/<Name>/Resources`. |
