@@ -5,6 +5,7 @@ A collection of macOS screen savers recreating classics from the 90s. Each one i
 | Screen saver | |
 | --- | --- |
 | [Retro Pipes](Savers/Pipes/README.md) | The Windows 3D Pipes: pipes grow through a deep 3D grid with ball and elbow joints, solid or textured, and the screen dissolves to black in random blocks when it fills up. Teapot included. |
+| [Retro Flower Box](Savers/FlowerBox/README.md) | The Windows 3D Flower Box: a colorful shape floats and tumbles across the screen while it swells into balloon petals, shoots out spikes, rounds into a volleyball and snaps back. Cube, tetrahedron, pyramid, cylinder or spring. |
 
 ## Install
 

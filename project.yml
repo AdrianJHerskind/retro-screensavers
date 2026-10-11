@@ -70,3 +70,9 @@ targets:
     templates: [Harness]
     templateAttributes:
       saver: Pipes
+  FlowerBox:
+    templates: [ScreenSaver]
+  FlowerBoxHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: FlowerBox
