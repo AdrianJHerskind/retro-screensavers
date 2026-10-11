@@ -6,10 +6,9 @@ options:
 
 settings:
   base:
-    # Change to a reverse-DNS prefix you own before publishing. Every bundle identifier is
-    # derived from it (Savers/Pipes → local.retroscreensaver.pipes), and so is where each
-    # saver stores its settings.
-    BUNDLE_ID_PREFIX: local.retroscreensaver
+    # Every bundle identifier is derived from this (Savers/Pipes → io.github.adrianjherskind.pipes),
+    # and so is where each saver stores its settings. Forks should change it to a prefix they own.
+    BUNDLE_ID_PREFIX: io.github.adrianjherskind
     PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).$(TARGET_NAME:lower)
     SWIFT_VERSION: "5.0"
     # Ad-hoc signing is enough to run locally; distribution needs a Developer ID + notarization.

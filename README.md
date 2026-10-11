@@ -75,7 +75,7 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
 
 ## Sharing it
 
-Local builds are ad-hoc signed, which is enough on this Mac. To give the `.saver` files to other people, sign them with a Developer ID and notarize them; otherwise Gatekeeper blocks them. Before publishing, set `BUNDLE_ID_PREFIX` in `project.yml` to a prefix you own.
+Local builds are ad-hoc signed, which is enough on this Mac. To give the `.saver` files to other people, sign them with a Developer ID and notarize them; otherwise Gatekeeper blocks them. If you publish your own fork, change `BUNDLE_ID_PREFIX` in `project.yml` to a prefix you own.
 
 ## License
 
