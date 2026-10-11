@@ -63,3 +63,5 @@ Local builds are ad-hoc signed, which is enough on this Mac. To give the `.saver
 ## License
 
 MIT; see [LICENSE](LICENSE).
+
+These are independent recreations, written from scratch. Not affiliated with or endorsed by Microsoft. Windows is a trademark of Microsoft Corporation.

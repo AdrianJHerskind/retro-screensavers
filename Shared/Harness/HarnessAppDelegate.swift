@@ -18,7 +18,15 @@ final class HarnessAppDelegate: NSObject, NSApplicationDelegate {
         window = NSWindow(contentRect: frame, styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = appName
         window.collectionBehavior = .fullScreenPrimary
-        saverView = HarnessSaver.makeView(frame: frame)
+        guard let view = HarnessSaver.makeView(frame: frame) else {
+            let alert = NSAlert()
+            alert.messageText = "The screen saver's view could not be created."
+            alert.informativeText = "Its init(frame:isPreview:) returned nil."
+            alert.runModal()
+            NSApp.terminate(nil)
+            return
+        }
+        saverView = view
         window.contentView = saverView
         window.center()
         window.makeKeyAndOrderFront(nil)
