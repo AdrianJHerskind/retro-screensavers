@@ -39,6 +39,12 @@ final class PipeKit {
     let elbow: SCNGeometry
     let teapot: SCNGeometry
 
+    /// Around the pipe; shared by straight runs and elbows so they meet cleanly.
+    private static let radialSegments = 24
+    private let material: SCNMaterial
+    /// Finished straight runs by length (in thousandths of a cell); runs come in only a few lengths.
+    private var straightRuns: [Int: SCNGeometry] = [:]
+
     convenience init(color: NSColor) {
         let material = Self.makeMaterial(specular: 1)
         material.diffuse.contents = color
@@ -57,14 +63,15 @@ final class PipeKit {
     }
 
     private init(material: SCNMaterial, runMaterial: SCNMaterial) {
+        self.material = material
         let radius = CGFloat(PipeMetrics.radius)
         let cylinder = SCNCylinder(radius: radius, height: 1)
-        cylinder.radialSegmentCount = 32
+        cylinder.radialSegmentCount = Self.radialSegments
         cylinder.materials = [runMaterial]
         let cap = SCNSphere(radius: radius)
-        cap.segmentCount = 32
+        cap.segmentCount = 20
         let ball = SCNSphere(radius: CGFloat(PipeMetrics.ballRadius))
-        ball.segmentCount = 40
+        ball.segmentCount = 24
         let elbow = Self.makeElbow(bendRadius: PipeMetrics.bendRadius, tubeRadius: PipeMetrics.radius)
         // Copies share the vertex data and only differ in material.
         let teapot = Teapot.geometry.copy() as! SCNGeometry
@@ -79,6 +86,47 @@ final class PipeKit {
         self.teapot = teapot
     }
 
+    /// A finished straight run, `length` long along Y. Unlike `cylinder` it isn't stretched by its
+    /// node's scale, and repeats its texture along its length itself, so it can be merged.
+    func straightRun(length: Float) -> SCNGeometry {
+        let key = Int((length * 1000).rounded())
+        if let geometry = straightRuns[key] {
+            return geometry
+        }
+        let segments = Self.radialSegments
+        var positions: [SCNVector3] = []
+        var normals: [SCNVector3] = []
+        var textureCoordinates: [CGPoint] = []
+        for y in [-length / 2, length / 2] {
+            for segment in 0...segments {
+                let angle = Float(segment) / Float(segments) * 2 * .pi
+                let normal = SIMD3<Float>(cos(angle), 0, sin(angle))
+                positions.append(SCNVector3(normal * PipeMetrics.radius + [0, y, 0]))
+                normals.append(SCNVector3(normal))
+                textureCoordinates.append(CGPoint(x: CGFloat(segment) / CGFloat(segments), y: CGFloat((y + length / 2) * PipeMetrics.textureRepeatsPerUnit)))
+            }
+        }
+        var indices: [UInt16] = []
+        for segment in 0..<segments {
+            let a = UInt16(segment)
+            let b = a + 1
+            let c = a + UInt16(segments + 1)
+            let d = c + 1
+            indices += [a, c, b, b, c, d]
+        }
+        let geometry = SCNGeometry(
+            sources: [
+                SCNGeometrySource(vertices: positions),
+                SCNGeometrySource(normals: normals),
+                SCNGeometrySource(textureCoordinates: textureCoordinates),
+            ],
+            elements: [SCNGeometryElement(indices: indices, primitiveType: .triangles)]
+        )
+        geometry.materials = [material]
+        straightRuns[key] = geometry
+        return geometry
+    }
+
     private static func makeMaterial(specular: CGFloat) -> SCNMaterial {
         let material = SCNMaterial()
         material.lightingModel = .phong
@@ -90,7 +138,7 @@ final class PipeKit {
 
     /// A quarter torus. In local space the pipe enters at (0, -R, 0) heading +X and
     /// leaves at (R, 0, 0) heading +Y, bending around the origin.
-    private static func makeElbow(bendRadius: Float, tubeRadius: Float, bendSegments: Int = 12, tubeSegments: Int = 32) -> SCNGeometry {
+    private static func makeElbow(bendRadius: Float, tubeRadius: Float, bendSegments: Int = 10, tubeSegments: Int = radialSegments) -> SCNGeometry {
         var positions: [SCNVector3] = []
         var normals: [SCNVector3] = []
         var textureCoordinates: [CGPoint] = []

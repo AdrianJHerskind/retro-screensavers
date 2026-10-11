@@ -18,10 +18,12 @@ final class PipesSaverView: RetroScreenSaverView {
         sceneView.autoresizingMask = [.width, .height]
         sceneView.backgroundColor = .black
         sceneView.antialiasingMode = .multisampling4X
+        // No need to follow 120 Hz displays; 60 is plenty and halves the work.
+        sceneView.preferredFramesPerSecond = 60
         sceneView.scene = pipes.scene
         sceneView.pointOfView = pipes.cameraNode
         sceneView.delegate = pipes
-        sceneView.overlaySKScene = pipes.overlay
+        pipes.setViewSize(frame.size)
         addSubview(sceneView)
         setAnimating(true)
     }
@@ -42,6 +44,7 @@ final class PipesSaverView: RetroScreenSaverView {
     }
 
     override func sizeDidSettle() {
+        pipes.setViewSize(bounds.size)
         pipes.restart(aspect: Self.aspect(of: bounds.size))
     }
 

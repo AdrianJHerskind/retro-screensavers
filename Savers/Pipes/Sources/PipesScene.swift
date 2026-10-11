@@ -26,6 +26,7 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
     private var lastUpdateTime: TimeInterval?
 
     private let restartLock = NSLock()
+    private var viewSize = CGSize(width: 16, height: 10)
     private var pendingSettings: PipesSettings?
     private var pendingAspect: Float?
 
@@ -70,9 +71,22 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
         pendingAspect = aspect ?? pendingAspect
     }
 
+    /// Thread-safe: the size the dissolve overlay should cover.
+    func setViewSize(_ size: CGSize) {
+        restartLock.lock()
+        defer { restartLock.unlock() }
+        viewSize = size
+    }
+
     var statusLine: String {
-        String(format: "grid %dx%dx%d, %.0f%% filled, %d growing, %@",
-               grid.size.x, grid.size.y, grid.size.z, grid.fillRatio * 100, pipes.count, String(describing: phase))
+        let nodes = pipeRoot.childNodes.reduce(0) { $0 + 1 + $1.childNodes.count }
+        return String(format: "grid %dx%dx%d, %.0f%% filled, %d growing, %d nodes, %@",
+                      grid.size.x, grid.size.y, grid.size.z, grid.fillRatio * 100, pipes.count, nodes, String(describing: phase))
+    }
+
+    private var isDissolving: Bool {
+        if case .dissolving = phase { return true }
+        return false
     }
 
     // MARK: - SCNSceneRendererDelegate
@@ -81,6 +95,16 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
         let dt = lastUpdateTime.map { Float((time - $0).clamped(to: 0...0.1)) } ?? 0
         lastUpdateTime = time
         step(by: dt)
+
+        // The overlay's hidden tiles still cost a little every frame, so it's only attached while dissolving.
+        if isDissolving, renderer.overlaySKScene == nil {
+            restartLock.lock()
+            overlay.size = viewSize
+            restartLock.unlock()
+            renderer.overlaySKScene = overlay
+        } else if !isDissolving, renderer.overlaySKScene != nil {
+            renderer.overlaySKScene = nil
+        }
     }
 
     // MARK: - Simulation
@@ -145,14 +169,17 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
             case .mixed: usesElbows = Bool.random(using: &rng)
             }
             let start = grid.center(of: cell)
-            addNode(kit.cap, at: start)
+            let node = SCNNode()
+            pipeRoot.addChildNode(node)
+            addNode(kit.cap, at: start, to: node)
             pipes.append(Pipe(
                 kit: kit,
                 usesElbows: usesElbows,
                 maxLength: Int.random(in: 20...80, using: &rng),
                 cell: cell,
                 direction: direction,
-                run: makeRunNode(kit: kit, direction: direction),
+                node: node,
+                run: makeRunNode(kit: kit, direction: direction, in: node),
                 runStart: start
             ))
             return true
@@ -182,8 +209,9 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
         if pipe.length >= pipe.maxLength || (!aheadIsFree && turns.isEmpty) {
             let center = grid.center(of: here)
             updateRun(of: pipe, to: center)
-            addNode(pipe.kit.cap, at: center)
+            addNode(pipe.kit.cap, at: center, to: pipe.node)
             pipe.isActive = false
+            merge(pipe)
             return
         }
 
@@ -206,20 +234,36 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
             let elbow = SCNNode(geometry: pipe.kit.elbow)
             elbow.simdPosition = center - incoming * bend + outgoing * bend
             elbow.simdOrientation = simd_quatf(simd_float3x3(incoming, outgoing, simd_cross(incoming, outgoing)))
-            pipeRoot.addChildNode(elbow)
+            pipe.node.addChildNode(elbow)
             pipe.runStart = center + outgoing * bend
         } else {
             updateRun(of: pipe, to: center)
             if Float.random(in: 0..<1, using: &rng) < teapotChance {
-                addTeapot(pipe.kit, at: center)
+                addTeapot(pipe.kit, at: center, to: pipe.node)
             } else {
-                addNode(pipe.kit.ball, at: center)
+                addNode(pipe.kit.ball, at: center, to: pipe.node)
             }
             pipe.runStart = center
         }
 
         pipe.direction = newDirection
-        pipe.run = makeRunNode(kit: pipe.kit, direction: newDirection)
+        pipe.run = makeRunNode(kit: pipe.kit, direction: newDirection, in: pipe.node)
+        pipe.runs.append(pipe.run)
+    }
+
+    /// Merges a finished pipe into a single node, so it's drawn in one go instead of piece by piece.
+    private func merge(_ pipe: Pipe) {
+        for run in pipe.runs {
+            if run.isHidden {
+                run.removeFromParentNode()
+            } else {
+                // Swap the stretched cylinder for one built at its real length, so the texture
+                // keeps repeating along it once the stretch is baked into the merged mesh.
+                run.geometry = pipe.kit.straightRun(length: run.simdScale.y)
+                run.simdScale = [1, 1, 1]
+            }
+        }
+        pipeRoot.replaceChildNode(pipe.node, with: pipe.node.flattenedClone())
     }
 
     private func updateRun(of pipe: Pipe, to end: SIMD3<Float>) {
@@ -230,7 +274,7 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
         pipe.run.simdPosition = pipe.runStart + direction * (length / 2)
     }
 
-    private func makeRunNode(kit: PipeKit, direction: Direction) -> SCNNode {
+    private func makeRunNode(kit: PipeKit, direction: Direction, in parent: SCNNode) -> SCNNode {
         let node = SCNNode(geometry: kit.cylinder)
         // SCNCylinder runs along Y; lay it along the pipe's axis.
         switch direction {
@@ -239,24 +283,24 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
         case .up, .down: break
         }
         node.isHidden = true
-        pipeRoot.addChildNode(node)
+        parent.addChildNode(node)
         return node
     }
 
-    private func addNode(_ geometry: SCNGeometry, at position: SIMD3<Float>) {
+    private func addNode(_ geometry: SCNGeometry, at position: SIMD3<Float>, to parent: SCNNode) {
         let node = SCNNode(geometry: geometry)
         node.simdPosition = position
-        pipeRoot.addChildNode(node)
+        parent.addChildNode(node)
     }
 
-    private func addTeapot(_ kit: PipeKit, at position: SIMD3<Float>) {
+    private func addTeapot(_ kit: PipeKit, at position: SIMD3<Float>, to parent: SCNNode) {
         let node = SCNNode(geometry: kit.teapot)
         node.simdPosition = position
         node.simdScale = SIMD3(repeating: PipeMetrics.teapotScale)
         // Roughly side-on, spout left or right, so it reads as a teapot from the camera.
         let facing: Float = Bool.random(using: &rng) ? 0 : .pi
         node.simdEulerAngles = [0, facing + Float.random(in: -0.6...0.6, using: &rng), 0]
-        pipeRoot.addChildNode(node)
+        parent.addChildNode(node)
     }
 
     /// The kits new pipes pick from under the current surface setting.
@@ -384,17 +428,22 @@ private final class Pipe {
     var progress: Float = 0
     var length = 0
     var isActive = true
+    /// Holds all of the pipe's pieces until it's finished and merged.
+    let node: SCNNode
     /// The straight run currently growing, and where it starts.
     var run: SCNNode
     var runStart: SIMD3<Float>
+    var runs: [SCNNode]
 
-    init(kit: PipeKit, usesElbows: Bool, maxLength: Int, cell: SIMD3<Int>, direction: Direction, run: SCNNode, runStart: SIMD3<Float>) {
+    init(kit: PipeKit, usesElbows: Bool, maxLength: Int, cell: SIMD3<Int>, direction: Direction, node: SCNNode, run: SCNNode, runStart: SIMD3<Float>) {
         self.kit = kit
         self.usesElbows = usesElbows
         self.maxLength = maxLength
         self.cell = cell
         self.direction = direction
+        self.node = node
         self.run = run
         self.runStart = runStart
+        runs = [run]
     }
 }
