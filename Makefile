@@ -55,12 +55,13 @@ uninstall:
 	@for saver in $(SAVERS); do rm -rf "$(INSTALL_DIR)/Retro$$saver.saver"; done
 	@killall legacyScreenSaver 2>/dev/null || true
 
-# Zips every saver into dist/ for a GitHub release. ditto keeps the bundle and its signature intact.
+# Zips every saver into dist/ for a GitHub release. ditto keeps the bundle and its signature intact;
+# the --no* flags leave out macOS metadata (._ files), which downloads don't need.
 dist: savers
 	@rm -rf dist
 	@mkdir -p dist
 	@for saver in $(SAVERS); do \
-		ditto -c -k --keepParent "$(PRODUCTS)/Release/Retro$$saver.saver" "dist/Retro$$saver.saver.zip"; \
+		ditto -c -k --keepParent --norsrc --noextattr --noacl "$(PRODUCTS)/Release/Retro$$saver.saver" "dist/Retro$$saver.saver.zip"; \
 		echo "dist/Retro$$saver.saver.zip"; \
 	done
 

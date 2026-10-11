@@ -37,6 +37,13 @@ targetTemplates:
         SKIP_INSTALL: YES
         # System Settings looks for thumbnail.png / thumbnail@2x.png, not a combined TIFF.
         COMBINE_HIDPI_IMAGES: NO
+      configs:
+        # Strip debug symbols from release builds; they hold this machine's build paths.
+        # Full debug info stays in the separate dSYM next to the build products.
+        Release:
+          DEPLOYMENT_POSTPROCESSING: YES
+          STRIP_INSTALLED_PRODUCT: YES
+          STRIP_STYLE: non-global
     scheme: {}
 
   # A saver's test app: the shared harness plus that saver's code. Needs templateAttributes.saver.
