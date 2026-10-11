@@ -32,9 +32,10 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
 | `make install` | Builds every saver (Release) and copies them to `~/Library/Screen Savers`. Then pick one in System Settings → Screen Saver. Local builds aren't blocked, so there's no `xattr` step. |
 | `make uninstall` | Removes them again. |
 | `make dist` | Builds every saver and zips each one into `dist/`, ready to attach to a GitHub release. |
-| `make run SAVER=Pipes` | Opens a saver's test app, which shows it in a normal window (⌘, for options, ⌃⌘F for full screen). Saver-specific flags go in `ARGS`. |
+| `make run SAVER=Pipes` | Opens a saver's test app, which shows it in a normal window (⌘, for options, ⌃⌘F for full screen). It's an optimized build, so it performs like the real saver; to use the debugger, run the `<Name>Harness` scheme from Xcode. Saver-specific flags go in `ARGS`. |
 | `make snapshot SAVER=Pipes ARGS="--time 30"` | Renders one frame offscreen to `build/snapshot.png`; also takes `--size WxH` and `--seed n`. |
 | `make thumbnails SAVER=Pipes` | Regenerates the saver's System Settings tile in `Savers/<Name>/Resources`. |
+| `make perf` | Measures each saver's CPU and memory use (and system-wide GPU use) in its test app, and warns if one is over budget; `SAVER=<Name>` for just one. See [Performance](#performance). |
 | `make project` | Generates `RetroScreensavers.xcodeproj` from `project.yml`, for working in Xcode. |
 
 `SAVER` defaults to `Pipes`.
@@ -50,7 +51,20 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
   - `RetroScreenSaverView`: the base class; handles the host quirks below.
   - `OptionsSheet`: the standard Options sheet layout.
   - Small helpers such as a seedable random number generator.
-- `Shared/Harness/`: the test app and the offscreen snapshot and thumbnail renderer, compiled into each saver's harness.
+- `Shared/Harness/`: the test app and the offscreen snapshot and thumbnail renderer, compiled into each saver's harness. It also has `PerformanceProbe`, the measuring side of `make perf`.
+- `Tools/perf-check.sh`: the performance budget check behind `make perf`.
+
+## Performance
+
+These should run as lightly as the originals did on 90s hardware. `make perf` runs each saver's test app, skips a warm-up, and measures its CPU time and memory for 30 seconds. It then prints a table and exits with an error if a saver averages more than 20% of one CPU core:
+
+```
+Saver          CPU avg  CPU peak      Memory        GPU
+FlowerBox        13.1%     14.0%      271 MB        25%   ok
+Pipes            14.9%     18.5%      266 MB        29%   ok
+```
+
+Budgets and durations are set with environment variables, e.g. `CPU_LIMIT=15 MEASURE_SECONDS=60 make perf`. `GPU_LIMIT` adds a GPU budget, but macOS only reports GPU use for the whole system, so close other busy apps first. The test app windows have to stay visible while they're measured. Run it before releasing, or after any change that touches drawing.
 
 ## Adding a screen saver
 
@@ -66,7 +80,7 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
      templateAttributes:
        saver: <Name>
    ```
-5. Run `make run SAVER=<Name>` to try it, then `make thumbnails SAVER=<Name>` and `make install`.
+5. Run `make run SAVER=<Name>` to try it, then `make thumbnails SAVER=<Name>`, `make perf SAVER=<Name>` and `make install`.
 
 ## macOS quirks handled
 

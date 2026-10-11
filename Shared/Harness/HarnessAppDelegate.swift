@@ -32,6 +32,10 @@ final class HarnessAppDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
         saverView.startAnimation()
         NSApp.activate()
+
+        if let duration = argumentValue("--measure").flatMap(Double.init) {
+            PerformanceProbe.start(measuring: duration, afterWarmup: argumentValue("--warmup").flatMap(Double.init) ?? 10)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

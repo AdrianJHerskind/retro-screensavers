@@ -8,9 +8,10 @@ PRODUCTS    := $(DERIVED)/Build/Products
 INSTALL_DIR := $(HOME)/Library/Screen Savers
 XCODEBUILD  := xcodebuild -project $(PROJECT) -derivedDataPath $(DERIVED) -quiet
 SOURCES     := $(shell find Shared Savers -type f)
-HARNESS     := $(PRODUCTS)/Debug/Retro$(SAVER)Harness.app
+# Optimized, so it performs like the real saver; debug it from Xcode.
+HARNESS     := $(PRODUCTS)/Release/Retro$(SAVER)Harness.app
 
-.PHONY: all project savers harness run snapshot thumbnails install uninstall dist clean
+.PHONY: all project savers harness run snapshot thumbnails perf install uninstall dist clean
 
 all: savers
 
@@ -24,7 +25,7 @@ savers: project
 	@for saver in $(SAVERS); do $(XCODEBUILD) -scheme $$saver -configuration Release build || exit 1; done
 
 harness: project
-	$(XCODEBUILD) -scheme $(SAVER)Harness -configuration Debug build
+	$(XCODEBUILD) -scheme $(SAVER)Harness -configuration Release build
 
 # Opens a saver in a window. Pass flags with ARGS, e.g. make run ARGS="--teapot-chance 0.3"
 # (quit a running harness first).
@@ -39,6 +40,11 @@ snapshot: harness
 thumbnails: harness
 	mkdir -p Savers/$(SAVER)/Resources
 	$(HARNESS)/Contents/MacOS/Retro$(SAVER)Harness --thumbnails Savers/$(SAVER)/Resources
+
+# Measures CPU (and memory and GPU) use in the test apps and warns when a saver is over budget.
+# Every saver by default, or one with SAVER=<Name>; see Tools/perf-check.sh for the budget settings.
+perf:
+	Tools/perf-check.sh $(if $(filter command line,$(origin SAVER)),$(SAVER))
 
 # Installs every saver. legacyScreenSaver caches loaded bundles; quitting it picks up new builds.
 install: savers
