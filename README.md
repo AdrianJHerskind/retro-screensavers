@@ -6,14 +6,31 @@ A collection of macOS screen savers recreating classics from the 90s. Each one i
 | --- | --- |
 | [Retro Pipes](Savers/Pipes/README.md) | The Windows 3D Pipes: pipes grow through a deep 3D grid with ball and elbow joints, solid or textured, and the screen dissolves to black in random blocks when it fills up. Teapot included. |
 
-Requires macOS 14+, Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+## Install
 
-## Usage
+Requires macOS 14 Sonoma or later, on Apple Silicon or Intel.
+
+1. Download a saver, e.g. `RetroPipes.saver.zip`, from the [latest release](https://github.com/AdrianJHerskind/retro-screensavers/releases/latest) and unzip it. Safari usually unzips it for you.
+2. The savers aren't notarized by Apple, so macOS blocks them when they're downloaded. To allow it, run this once in Terminal (adjust the path if you unzipped it somewhere other than Downloads):
+   ```bash
+   xattr -dr com.apple.quarantine ~/Downloads/RetroPipes.saver
+   ```
+3. Double-click `RetroPipes.saver` and choose to install it.
+4. Pick it in System Settings → Screen Saver. Third-party savers are listed under **Other**, at the bottom. **Options…** opens its settings.
+
+If you installed it before step 2, run the command on the installed copy instead: `xattr -dr com.apple.quarantine ~/Library/Screen\ Savers/RetroPipes.saver`.
+
+To uninstall, delete it from `~/Library/Screen Savers`.
+
+## Building from source
+
+Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 | Command | What it does |
 | --- | --- |
-| `make install` | Builds every saver (Release) and copies them to `~/Library/Screen Savers`. Then pick one in System Settings → Screen Saver. |
+| `make install` | Builds every saver (Release) and copies them to `~/Library/Screen Savers`. Then pick one in System Settings → Screen Saver. Local builds aren't blocked, so there's no `xattr` step. |
 | `make uninstall` | Removes them again. |
+| `make dist` | Builds every saver and zips each one into `dist/`, ready to attach to a GitHub release. |
 | `make run SAVER=Pipes` | Opens a saver's test app, which shows it in a normal window (⌘, for options, ⌃⌘F for full screen). Saver-specific flags go in `ARGS`. |
 | `make snapshot SAVER=Pipes ARGS="--time 30"` | Renders one frame offscreen to `build/snapshot.png`; also takes `--size WxH` and `--seed n`. |
 | `make thumbnails SAVER=Pipes` | Regenerates the saver's System Settings tile in `Savers/<Name>/Resources`. |

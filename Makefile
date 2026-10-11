@@ -10,7 +10,7 @@ XCODEBUILD  := xcodebuild -project $(PROJECT) -derivedDataPath $(DERIVED) -quiet
 SOURCES     := $(shell find Shared Savers -type f)
 HARNESS     := $(PRODUCTS)/Debug/Retro$(SAVER)Harness.app
 
-.PHONY: all project savers harness run snapshot thumbnails install uninstall clean
+.PHONY: all project savers harness run snapshot thumbnails install uninstall dist clean
 
 all: savers
 
@@ -55,5 +55,14 @@ uninstall:
 	@for saver in $(SAVERS); do rm -rf "$(INSTALL_DIR)/Retro$$saver.saver"; done
 	@killall legacyScreenSaver 2>/dev/null || true
 
+# Zips every saver into dist/ for a GitHub release. ditto keeps the bundle and its signature intact.
+dist: savers
+	@rm -rf dist
+	@mkdir -p dist
+	@for saver in $(SAVERS); do \
+		ditto -c -k --keepParent "$(PRODUCTS)/Release/Retro$$saver.saver" "dist/Retro$$saver.saver.zip"; \
+		echo "dist/Retro$$saver.saver.zip"; \
+	done
+
 clean:
-	rm -rf $(DERIVED) $(PROJECT)
+	rm -rf $(DERIVED) $(PROJECT) dist
