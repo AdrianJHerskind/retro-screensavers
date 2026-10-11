@@ -76,3 +76,9 @@ targets:
     templates: [Harness]
     templateAttributes:
       saver: FlowerBox
+  Text3D:
+    templates: [ScreenSaver]
+  Text3DHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: Text3D
