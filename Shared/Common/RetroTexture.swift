@@ -1,9 +1,9 @@
 import CoreGraphics
 import Foundation
 
-/// Built-in textures for the textured surface styles. They're generated procedurally and tile
-/// seamlessly, so they can be wrapped around the pipes the way the Windows original wrapped a bitmap.
-enum PipeTexture: CaseIterable {
+/// Built-in textures for savers' textured surface styles. They're generated procedurally and tile
+/// seamlessly, so they can be wrapped around shapes the way the Windows originals wrapped a bitmap.
+enum RetroTexture: CaseIterable {
     case marble
     case wood
     case granite
@@ -47,8 +47,8 @@ enum PipeTexture: CaseIterable {
         }
     }
 
-    /// Returns a function from texture coordinates (each 0..<1) to an RGB colour. Around the pipe is
-    /// `u`, along it is `v`. Anything periodic in both keeps the texture seamless.
+    /// Returns a function from texture coordinates (each 0..<1) to an RGB colour. Grain and veins run
+    /// along `v` (along a pipe, for instance). Anything periodic in both keeps the texture seamless.
     private func makeShader(rng: inout SplitMix64) -> (Float, Float) -> SIMD3<Float> {
         switch self {
         case .marble:

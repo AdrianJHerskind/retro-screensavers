@@ -51,7 +51,7 @@ final class PipeKit {
         self.init(material: material, runMaterial: material)
     }
 
-    convenience init(texture: PipeTexture) {
+    convenience init(texture: RetroTexture) {
         let material = Self.makeMaterial(specular: texture.specular)
         material.diffuse.contents = texture.makeImage()
         material.diffuse.wrapS = .repeat

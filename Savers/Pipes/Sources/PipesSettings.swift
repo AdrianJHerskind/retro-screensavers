@@ -34,13 +34,13 @@ enum Surface: Int, CaseIterable {
     }
 
     /// The textures pipes are drawn with, one picked per pipe; empty for solid colours.
-    var textures: [PipeTexture] {
+    var textures: [RetroTexture] {
         switch self {
         case .solid: return []
         case .marble: return [.marble]
         case .wood: return [.wood]
         case .granite: return [.granite]
-        case .mixedTextures: return PipeTexture.allCases
+        case .mixedTextures: return RetroTexture.allCases
         }
     }
 }

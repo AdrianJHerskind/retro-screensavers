@@ -14,7 +14,7 @@ final class PipesScene: NSObject, SCNSceneRendererDelegate {
     private let pipeRoot = SCNNode()
     private lazy var solidKits = PipeKit.palette.map(PipeKit.init(color:))
     /// Built on first use, since generating a texture takes a moment.
-    private var textureKits: [PipeTexture: PipeKit] = [:]
+    private var textureKits: [RetroTexture: PipeKit] = [:]
     private var settings: PipesSettings
     private var rng: SplitMix64
     private var grid: Grid

@@ -25,8 +25,7 @@ Use these with `make run SAVER=Pipes ARGS="…"` or `make snapshot SAVER=Pipes A
 ## Code
 
 - `PipesScene.swift`: the simulation (grid walk, turns, joints, fill and reset cycle, camera). It runs on SceneKit's render thread.
-- `PipeKit.swift`: materials and shared geometry per color or texture. It includes the quarter-torus elbow mesh and a shader modifier that keeps textures from stretching along straight runs.
-- `PipeTexture.swift`: the textures, generated from tiling noise so they wrap seamlessly.
+- `PipeKit.swift`: materials and shared geometry per color or texture (the textures themselves are `RetroTexture`, in `Shared/Common`). It includes the quarter-torus elbow mesh and a shader modifier that keeps textures from stretching along straight runs.
 - `Teapot.swift`: the Utah teapot, tessellated from Newell's original Bézier patches.
 - `DissolveOverlay.swift`: the random-blocks wipe, drawn as a SpriteKit overlay.
 - `PipesSaverView.swift`, `PipesOptions.swift`, `PipesSettings.swift`: the view, the Options sheet, and the saved settings.
