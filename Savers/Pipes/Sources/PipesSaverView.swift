@@ -18,13 +18,14 @@ final class PipesSaverView: RetroScreenSaverView {
         sceneView.autoresizingMask = [.width, .height]
         sceneView.backgroundColor = .black
         sceneView.antialiasingMode = .multisampling4X
-        // No need to follow 120 Hz displays; 60 is plenty and halves the work.
-        sceneView.preferredFramesPerSecond = 60
         sceneView.scene = pipes.scene
         sceneView.pointOfView = pipes.cameraNode
         sceneView.delegate = pipes
         pipes.setViewSize(frame.size)
         addSubview(sceneView)
+        // The scene is nearly still; only the pipe tips move, slowly. 30 fps looks the same at half the cost.
+        fullFrameRate = 30
+        frameRateDidChange()
         setAnimating(true)
     }
 
@@ -36,6 +37,10 @@ final class PipesSaverView: RetroScreenSaverView {
     var teapotChance: Float {
         get { pipes.teapotChance }
         set { pipes.teapotChance = newValue }
+    }
+
+    override func frameRateDidChange() {
+        sceneView.preferredFramesPerSecond = frameRate
     }
 
     override func setAnimating(_ isAnimating: Bool) {

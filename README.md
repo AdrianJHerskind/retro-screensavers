@@ -56,20 +56,22 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
 
 ## Performance
 
-These should run as lightly as the originals did on 90s hardware. `make perf` runs each saver's test app, skips a warm-up, and measures its CPU time and memory for 30 seconds. It then prints a table and exits with an error if a saver averages more than 20% of one CPU core:
+These should run as lightly as the originals did on 90s hardware. Every saver declares the frame rate it needs (Pipes 30 fps, since only its pipe tips move; Flower Box 60 fps, since the whole object keeps moving). On battery or in Low Power Mode, all of them drop to at most 30 fps, and go back up when the Mac is plugged in again.
+
+`make perf` runs each saver's test app, skips a warm-up, and measures its CPU time and memory for 30 seconds. It then prints a table and exits with an error if a saver averages more than 20% of one CPU core. On an M3 Pro, plugged in:
 
 ```
 Saver          CPU avg  CPU peak      Memory        GPU
-FlowerBox        13.1%     14.0%      271 MB        25%   ok
-Pipes            14.9%     18.5%      266 MB        29%   ok
+FlowerBox        12.2%     16.6%      291 MB        20%   ok
+Pipes             3.8%      5.0%      228 MB        19%   ok
 ```
 
-Budgets and durations are set with environment variables, e.g. `CPU_LIMIT=15 MEASURE_SECONDS=60 make perf`. `GPU_LIMIT` adds a GPU budget, but macOS only reports GPU use for the whole system, so close other busy apps first. The test app windows have to stay visible while they're measured. Run it before releasing, or after any change that touches drawing.
+`HARNESS_ARGS=--battery make perf` measures the battery frame rates (Flower Box drops to about 5%). Budgets and durations are set with environment variables too, e.g. `CPU_LIMIT=15 MEASURE_SECONDS=60 make perf`. `GPU_LIMIT` adds a GPU budget, but macOS only reports GPU use for the whole system, so close other busy apps first. The test app windows have to stay visible while they're measured. Run it before releasing, or after any change that touches drawing.
 
 ## Adding a screen saver
 
 1. Create `Savers/<Name>/` with `Sources/`, `Harness/` and an `Info.plist` (copy the one from Pipes and change `NSPrincipalClass` and the names).
-2. In `Sources/`, subclass `RetroScreenSaverView` and give it a unique Objective-C name matching the plist, e.g. `@objc(RetroStarfieldSaverView)`. Override `setAnimating(_:)` to start and stop drawing.
+2. In `Sources/`, subclass `RetroScreenSaverView` and give it a unique Objective-C name matching the plist, e.g. `@objc(RetroStarfieldSaverView)`. Override `setAnimating(_:)` to start and stop drawing, and `frameRateDidChange()` to apply `frameRate`. Set `fullFrameRate` if the saver doesn't need 60 fps.
 3. In `Harness/`, add an `enum HarnessSaver: HarnessSupport`.
 4. Add the targets to `project.yml`:
    ```yaml

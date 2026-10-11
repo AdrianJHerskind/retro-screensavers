@@ -18,17 +18,21 @@ final class FlowerBoxSaverView: RetroScreenSaverView {
         sceneView.autoresizingMask = [.width, .height]
         sceneView.backgroundColor = .black
         sceneView.antialiasingMode = .multisampling4X
-        // No need to follow 120 Hz displays; 60 is plenty and halves the work.
-        sceneView.preferredFramesPerSecond = 60
         sceneView.scene = flowerBox.scene
         sceneView.pointOfView = flowerBox.cameraNode
         sceneView.delegate = flowerBox
         addSubview(sceneView)
+        // The whole object keeps moving, so it stays at 60 fps unless the Mac is saving power.
+        frameRateDidChange()
         setAnimating(true)
     }
 
     required init?(coder: NSCoder) {
         nil
+    }
+
+    override func frameRateDidChange() {
+        sceneView.preferredFramesPerSecond = frameRate
     }
 
     override func setAnimating(_ isAnimating: Bool) {

@@ -31,4 +31,4 @@ For snapshots, use `make snapshot SAVER=FlowerBox ARGS="…"`:
 
 ### Performance
 
-Every morph cycle is identical; only the position, rotation and colors vary, and those don't touch the mesh. So `ShapeMesh` builds each frame's geometry once (30 per second of morph, with pauses sharing one) and keeps it. After the first cycle, drawing a frame just picks a geometry that's already on the GPU. Measured in the optimized test app, it uses about 13% of one CPU core at 60 fps (see `make perf`), most of which is SceneKit's own per-frame overhead.
+Every morph cycle is identical; only the position, rotation and colors vary, and those don't touch the mesh. So `ShapeMesh` builds each frame's geometry once (30 per second of morph, with pauses sharing one) and keeps it. After the first cycle, drawing a frame just picks a geometry that's already on the GPU. Measured in the optimized test app, it uses about 12% of one CPU core at 60 fps, most of which is SceneKit's own per-frame overhead. On battery or in Low Power Mode it drops to 30 fps and about 5% (see `make perf`).

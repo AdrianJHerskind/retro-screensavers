@@ -11,6 +11,8 @@
 #   GPU_LIMIT=          optional budget in percent of the GPU (system-wide)
 #   WARMUP_SECONDS=10   skipped before measuring, so one-off setup isn't counted
 #   MEASURE_SECONDS=30  how long to measure each saver
+#   HARNESS_ARGS=       extra flags for the test apps, e.g. --battery to measure the reduced
+#                       frame rate the savers switch to on battery or in Low Power Mode
 #
 # Each test app opens a 1280x800 window, which has to stay visible while it's measured, and uses the
 # Options saved in that test app. Exits with status 1 if any saver is over budget.
@@ -21,6 +23,7 @@ CPU_LIMIT=${CPU_LIMIT:-20}
 GPU_LIMIT=${GPU_LIMIT:-}
 WARMUP_SECONDS=${WARMUP_SECONDS:-10}
 MEASURE_SECONDS=${MEASURE_SECONDS:-30}
+HARNESS_ARGS=${HARNESS_ARGS:-}
 
 savers=("$@")
 if [ ${#savers[@]} -eq 0 ]; then
@@ -60,7 +63,9 @@ for saver in "${savers[@]}"; do
 
     echo "Measuring $saver for ${MEASURE_SECONDS}s after ${WARMUP_SECONDS}s of warm-up…"
     app="build/Build/Products/Release/Retro${saver}Harness.app/Contents/MacOS/Retro${saver}Harness"
-    "$app" --measure "$MEASURE_SECONDS" --warmup "$WARMUP_SECONDS" >"$log" 2>/dev/null &
+    # HARNESS_ARGS is split into separate flags on purpose.
+    # shellcheck disable=SC2086
+    "$app" --measure "$MEASURE_SECONDS" --warmup "$WARMUP_SECONDS" $HARNESS_ARGS >"$log" 2>/dev/null &
     pid=$!
     sleep "$WARMUP_SECONDS"
     gpu=$(sample_gpu "$MEASURE_SECONDS")
@@ -97,7 +102,7 @@ for row in ${rows[@]+"${rows[@]}"}; do
     echo "$row"
 done
 echo
-echo "CPU is percent of one core; GPU is system-wide (${idle_gpu}% before the test apps ran)."
+echo "CPU is percent of one core; GPU is system-wide (${idle_gpu}% before the test apps ran).${HARNESS_ARGS:+ Test app flags: $HARNESS_ARGS}"
 
 if [ ${#over_budget[@]} -gt 0 ]; then
     echo "⚠️  Over budget: ${over_budget[*]+${over_budget[*]}}"

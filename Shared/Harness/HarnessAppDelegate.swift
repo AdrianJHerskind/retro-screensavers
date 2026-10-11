@@ -18,6 +18,7 @@ final class HarnessAppDelegate: NSObject, NSApplicationDelegate {
         window = NSWindow(contentRect: frame, styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = appName
         window.collectionBehavior = .fullScreenPrimary
+        RetroScreenSaverView.simulatesBattery = CommandLine.arguments.contains("--battery")
         guard let view = HarnessSaver.makeView(frame: frame) else {
             let alert = NSAlert()
             alert.messageText = "The screen saver's view could not be created."
