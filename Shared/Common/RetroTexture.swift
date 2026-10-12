@@ -96,7 +96,7 @@ private func lerp(_ a: SIMD3<Float>, _ b: SIMD3<Float>, _ t: Float) -> SIMD3<Flo
 }
 
 /// Value noise on a lattice that wraps around, so it tiles seamlessly over 0..<1.
-private struct TilingNoise {
+struct TilingNoise {
     private let periodU: Int
     private let periodV: Int
     private let lattice: [Float]
@@ -131,7 +131,7 @@ private struct TilingNoise {
 }
 
 /// Several octaves of `TilingNoise`, each at double the frequency and half the amplitude.
-private struct FractalNoise {
+struct FractalNoise {
     private let octaves: [TilingNoise]
 
     init(period: Int, octaves: Int, rng: inout SplitMix64) {
