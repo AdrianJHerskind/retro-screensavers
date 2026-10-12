@@ -7,6 +7,7 @@ A collection of macOS screen savers recreating classics from the 90s. Each one i
 | [Retro Pipes](Savers/Pipes/README.md) | The Windows 3D Pipes: pipes grow through a deep 3D grid with ball and elbow joints, solid or textured, and the screen dissolves to black in random blocks when it fills up. Teapot included. |
 | [Retro Flower Box](Savers/FlowerBox/README.md) | The Windows 3D Flower Box: a colorful shape floats and tumbles across the screen while it swells into balloon petals, shoots out spikes, rounds into a volleyball and snaps back. Cube, tetrahedron, pyramid, cylinder or spring. |
 | [Retro 3D Text](Savers/Text3D/README.md) | The Windows 3D Text: your own words or the current time, extruded in 3D and spinning, rocking, wobbling or tumbling. Chrome, solid color, marble, wood or granite. |
+| [Retro Starfield](Savers/Starfield/README.md) | The Windows Starfield Simulation: flying through a field of stars that stream out of the depths, brightening and growing as they pass. Warp speed and star density. |
 
 ## Install
 
@@ -78,6 +79,7 @@ These should run as lightly as the originals did on 90s hardware. Every saver de
 Saver          CPU avg  CPU peak      Memory        GPU
 FlowerBox        12.2%     16.6%      291 MB        20%   ok
 Pipes             3.8%      5.0%      228 MB        19%   ok
+Starfield         4.7%      9.1%      251 MB        14%   ok
 Text3D            3.1%      4.5%      184 MB        23%   ok
 ```
 

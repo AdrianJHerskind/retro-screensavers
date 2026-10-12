@@ -82,3 +82,9 @@ targets:
     templates: [Harness]
     templateAttributes:
       saver: Text3D
+  Starfield:
+    templates: [ScreenSaver]
+  StarfieldHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: Starfield
