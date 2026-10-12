@@ -88,3 +88,9 @@ targets:
     templates: [Harness]
     templateAttributes:
       saver: Starfield
+  Maze:
+    templates: [ScreenSaver]
+  MazeHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: Maze
