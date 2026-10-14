@@ -100,3 +100,9 @@ targets:
     templates: [Harness]
     templateAttributes:
       saver: FlyingObjects
+  Mystify:
+    templates: [ScreenSaver]
+  MystifyHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: Mystify
