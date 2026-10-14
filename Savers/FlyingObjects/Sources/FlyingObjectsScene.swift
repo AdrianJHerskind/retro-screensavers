@@ -1,13 +1,15 @@
 import SceneKit
 
 /// One of the Flying Objects styles bouncing around the screen and tumbling, while a shader on
-/// the GPU animates its shape (see `FlyingShapes`).
+/// the GPU animates its shape (see `FlyingShapes`). The shader's clock is the z position of
+/// `clockNode`, the object's parent.
 ///
 /// Everything runs on SceneKit's render thread via `renderer(_:updateAtTime:)`.
 final class FlyingObjectsScene: NSObject, SCNSceneRendererDelegate {
     let scene = SCNScene()
     let cameraNode = SCNNode()
 
+    private let clockNode = SCNNode()
     private let objectNode = SCNNode()
     private let shapeNode = SCNNode()
     private var material = SCNMaterial()
@@ -15,8 +17,7 @@ final class FlyingObjectsScene: NSObject, SCNSceneRendererDelegate {
     private var aspect: Float
     private var rng: SplitMix64
     private var extent: Float = 1
-    private var time: Float = 0
-    private var hueShift: Float = 0
+    private var clock = 0.0
     private var position = SIMD2<Float>(0, 0)
     private var velocity = SIMD2<Float>(0, 0)
     private var spinAxis = SIMD3<Float>(0, 1, 0)
@@ -32,8 +33,6 @@ final class FlyingObjectsScene: NSObject, SCNSceneRendererDelegate {
     /// Floating speed in screen heights per second, and tumbling speed in radians per second.
     private static let floatSpeed: Float = 0.15
     private static let spinSpeed: Float = 0.6
-    /// Hue turns per second when cycling colours.
-    private static let hueSpeed: Float = 0.05
 
     init(settings: FlyingObjectsSettings, aspect: Float, seed: UInt64) {
         self.settings = settings
@@ -78,13 +77,8 @@ final class FlyingObjectsScene: NSObject, SCNSceneRendererDelegate {
         }
 
         let dt = dt * Float(settings.speed)
-        // Kept small so the shaders' float maths stays precise however long it runs.
-        time = (time + dt).truncatingRemainder(dividingBy: 1000)
-        material.setValue(NSNumber(value: time), forKey: "fo_time")
-        if settings.cyclesColors, settings.style != .flag {
-            hueShift = (hueShift + dt * Self.hueSpeed).truncatingRemainder(dividingBy: 1)
-            material.setValue(NSNumber(value: hueShift), forKey: "fo_hue_shift")
-        }
+        clock = (clock + Double(dt)).truncatingRemainder(dividingBy: Double(FlyingShapes.loopLength))
+        clockNode.simdPosition = [0, 0, Float(clock) / FlyingShapes.clockScale]
 
         let nudge = SIMD3(Float.random(in: -1...1, using: &rng), Float.random(in: -1...1, using: &rng), Float.random(in: -1...1, using: &rng))
         spinAxis = simd_normalize(spinAxis + nudge * dt * 0.3)
@@ -122,8 +116,7 @@ final class FlyingObjectsScene: NSObject, SCNSceneRendererDelegate {
             material.diffuse.contents = NSColor.white
         }
         material.shaderModifiers = [.geometry: shape.shader, .surface: FlyingShapes.surfaceShader]
-        material.setValue(NSNumber(value: time), forKey: "fo_time")
-        material.setValue(NSNumber(value: hueShift), forKey: "fo_hue_shift")
+        material.setValue(NSNumber(value: settings.cyclesColors && settings.style != .flag ? 1 : 0), forKey: "fo_cycle")
         material.setValue(NSNumber(value: settings.smoothShading ? 0 : 1), forKey: "fo_flat")
         shape.geometry.materials = [material]
         shapeNode.geometry = shape.geometry
@@ -138,7 +131,8 @@ final class FlyingObjectsScene: NSObject, SCNSceneRendererDelegate {
 
     private func setUpScene() {
         scene.background.contents = NSColor.black
-        scene.rootNode.addChildNode(objectNode)
+        scene.rootNode.addChildNode(clockNode)
+        clockNode.addChildNode(objectNode)
         objectNode.addChildNode(shapeNode)
 
         let camera = SCNCamera()

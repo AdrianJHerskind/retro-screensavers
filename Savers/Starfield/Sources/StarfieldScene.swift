@@ -5,6 +5,9 @@ import SceneKit
 /// All the stars are one point mesh drawn in a single call, and the GPU moves them: each star keeps
 /// a fixed spot and a phase along the flight, and a shader modifier places it from a shared clock.
 /// So the CPU only advances that clock each frame, however many stars there are.
+///
+/// The clock reaches the shader as the stars node's z position, which the shader then takes back
+/// out. Moving a node each frame costs far less CPU than updating a material's shader value.
 final class StarfieldScene: NSObject, SCNSceneRendererDelegate {
     let scene = SCNScene()
     let cameraNode = SCNNode()
@@ -34,12 +37,11 @@ final class StarfieldScene: NSObject, SCNSceneRendererDelegate {
     /// Places each star along its flight. The vertex colour's red channel carries the star's phase;
     /// the colour is then set to its brightness, so far stars are dim grey and near ones white.
     private static let flightShader = """
-        #pragma arguments
-        float flight;
         #pragma body
+        float flight = scn_node.modelTransform[3].z;
         float travelled = fract(_geometry.color.r - flight);
         float distance = \(nearest)f + (1.0f - travelled) * \(farthest - nearest)f;
-        _geometry.position.z = -distance;
+        _geometry.position.z = -distance - flight;
         float brightness = 0.18f + 0.82f * travelled * travelled;
         _geometry.color = float4(brightness, brightness, brightness, 1.0f);
         """
@@ -93,7 +95,7 @@ final class StarfieldScene: NSObject, SCNSceneRendererDelegate {
         }
 
         flight = (flight + dt * Self.flightRate * Float(settings.warpSpeed)).truncatingRemainder(dividingBy: 1)
-        material.setValue(NSNumber(value: flight), forKey: "flight")
+        starsNode.simdPosition = [0, 0, flight]
     }
 
     private func buildStars() {
@@ -124,9 +126,10 @@ final class StarfieldScene: NSObject, SCNSceneRendererDelegate {
 
         let geometry = SCNGeometry(sources: [SCNGeometrySource(vertices: positions), colors], elements: [element])
         geometry.materials = [material]
-        // The stars move in the shader, so tell SceneKit the whole volume they fly through.
+        // The stars move in the shader, so tell SceneKit the whole volume they fly through,
+        // allowing for the node's offset in z, which the shader takes back out.
         geometry.boundingBox = (
-            min: SCNVector3(-spread.x, -spread.y, -Self.farthest),
+            min: SCNVector3(-spread.x, -spread.y, -Self.farthest - 1),
             max: SCNVector3(spread.x, spread.y, -Self.nearest)
         )
         starsNode.geometry = geometry
@@ -140,7 +143,6 @@ final class StarfieldScene: NSObject, SCNSceneRendererDelegate {
         material.lightingModel = .constant
         material.diffuse.contents = NSColor.white
         material.shaderModifiers = [.geometry: Self.flightShader]
-        material.setValue(NSNumber(value: Float(0)), forKey: "flight")
         scene.rootNode.addChildNode(starsNode)
 
         let camera = SCNCamera()

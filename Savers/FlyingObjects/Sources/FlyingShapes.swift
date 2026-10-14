@@ -4,7 +4,7 @@ import SceneKit
 ///
 /// The meshes mostly store parameters rather than final positions: where along the ribbon, which
 /// facet of the sphere, how far out on the disc. The shaders turn those into the moving shape from
-/// the `fo_time` clock, so the CPU only advances the clock each frame.
+/// the `fo_time` clock, so the CPU only advances the clock each frame (see `animated`).
 struct FlyingShape {
     let geometry: SCNGeometry
     let shader: String
@@ -13,6 +13,18 @@ struct FlyingShape {
 }
 
 enum FlyingShapes {
+    /// The clock runs from 0 to this many seconds and starts over, which keeps the shaders' float
+    /// maths precise. Every rate in the shaders turns a whole number of times per loop, so the
+    /// loop is seamless. The loop is 100 turns of 2π seconds, so rates in radians per second can
+    /// have up to two decimals; other rates are counted per loop.
+    static let loopLength: Float = 200 * .pi
+    /// The clock node's z position is the clock divided by this, which keeps the offset that the
+    /// shaders take back out small.
+    static let clockScale: Float = 1000
+    /// Explode's bursts, and the colour-cycling hue's turns, per loop (about 0.12 and 0.05 per second).
+    private static let burstsPerLoop: Float = 75
+    private static let hueTurnsPerLoop: Float = 31
+
     static func make(_ style: FlyingStyle, resolution: Double) -> FlyingShape {
         let r = Float(resolution.clamped(to: 0...1))
         switch style {
@@ -41,6 +53,25 @@ enum FlyingShapes {
         _surface.normal = n;
         """
 
+    /// A style's geometry shader modifier, around its `body`. The clock reaches the shader as the
+    /// z position of the object's parent node (see `FlyingObjectsScene`), because moving a node each
+    /// frame costs far less CPU than updating a material's shader value. The body gets the clock
+    /// as `fo_time` and the colour-cycling hue as `fo_hue_shift`. Afterwards, the node's offset is
+    /// taken back out of the position.
+    private static func animated(functions: String = "", body: String) -> String {
+        """
+        \(functions)
+        #pragma arguments
+        float fo_cycle;
+        #pragma body
+        float fo_offset = scn_node.modelTransform[3].z;
+        float fo_time = fo_offset * \(clockScale);
+        float fo_hue_shift = fo_cycle * fract(fo_time * \(hueTurnsPerLoop / loopLength));
+        \(body)
+        _geometry.position.xyz -= (scn_node.inverseModelTransform * float4(0.0, 0.0, fo_offset, 0.0)).xyz;
+        """
+    }
+
     /// Hue (0...1, wrapping) to a bright colour, shared by the coloured styles.
     private static let hueFunction = """
         float3 fo_hue(float h) {
@@ -57,10 +88,7 @@ enum FlyingShapes {
         mesh.grid(columns: columns, rows: rows) { u, v in
             (position: [-1.2 + 2.4 * u, -0.8 + 1.6 * v, 0], uv: CGPoint(x: CGFloat(u), y: CGFloat(1 - v)))
         }
-        let shader = """
-            #pragma arguments
-            float fo_time;
-            #pragma body
+        let shader = animated(body: """
             float x = _geometry.position.x;
             float y = _geometry.position.y;
             float along = (x + 1.2) / 2.4;
@@ -71,7 +99,7 @@ enum FlyingShapes {
             float dzdx = (0.22 / 2.4) * (sin(p1) + 0.35 * sin(p2)) + a * (3.2 * cos(p1) + 0.35 * 2.0 * cos(p2));
             float dzdy = 0.35 * a * 2.1 * cos(p2);
             _geometry.normal = normalize(float3(-dzdx, -dzdy, 1.0));
-            """
+            """)
         return FlyingShape(geometry: mesh.geometry(extent: 1.5), shader: shader, extent: 1.5)
     }
 
@@ -86,7 +114,7 @@ enum FlyingShapes {
                 (position: [u, v * 2 - 1, Float(ribbon)], uv: .zero)
             }
         }
-        let shader = """
+        let functions = """
             \(hueFunction)
             float3 fo_curve(float s, float t, float ribbon) {
                 float a = 6.2831853 * s;
@@ -94,10 +122,8 @@ enum FlyingShapes {
                               0.8 * sin(3.0 * a + 0.31 * t + 1.7 * ribbon),
                               0.9 * sin(a + 0.53 * t + 0.9 * ribbon) + 0.3 * cos(2.0 * a + 0.2 * t));
             }
-            #pragma arguments
-            float fo_time;
-            float fo_hue_shift;
-            #pragma body
+            """
+        let shader = animated(functions: functions, body: """
             float s = _geometry.position.x;
             float w = _geometry.position.y;
             float ribbon = _geometry.position.z;
@@ -110,7 +136,7 @@ enum FlyingShapes {
             _geometry.position.xyz = center + side * w * 0.16;
             _geometry.normal = normalize(cross(side, tangent));
             _geometry.color = float4(fo_hue(s + fo_hue_shift + 0.5 * ribbon), 1.0);
-            """
+            """)
         return FlyingShape(geometry: mesh.geometry(extent: 1.6), shader: shader, extent: 1.6)
     }
 
@@ -123,12 +149,7 @@ enum FlyingShapes {
             let angle = u * 2 * .pi
             return (position: [v * cos(angle), v * sin(angle), 0], uv: .zero)
         }
-        let shader = """
-            \(hueFunction)
-            #pragma arguments
-            float fo_time;
-            float fo_hue_shift;
-            #pragma body
+        let shader = animated(functions: hueFunction, body: """
             float r = length(_geometry.position.xy);
             float2 outward = r > 0.0001 ? _geometry.position.xy / r : float2(1.0, 0.0);
             float wave = 7.0 * r - 3.5 * fo_time;
@@ -137,7 +158,7 @@ enum FlyingShapes {
             float slope = 0.28 * envelope * (7.0 * cos(wave) - 1.6 * sin(wave));
             _geometry.normal = normalize(float3(-slope * outward, 1.0));
             _geometry.color = float4(fo_hue(0.8 * r + fo_hue_shift), 1.0);
-            """
+            """)
         return FlyingShape(geometry: mesh.geometry(extent: 1.05), shader: shader, extent: 1.05)
     }
 
@@ -170,12 +191,7 @@ enum FlyingShapes {
                 mesh.triangle(center, rim[k], rim[(k + 1) % points])
             }
         }
-        let shader = """
-            \(hueFunction)
-            #pragma arguments
-            float fo_time;
-            float fo_hue_shift;
-            #pragma body
+        let shader = animated(functions: hueFunction, body: """
             float angle = 2.4 * sin(0.7 * fo_time) * _geometry.position.y;
             float c = cos(angle);
             float s = sin(angle);
@@ -184,7 +200,7 @@ enum FlyingShapes {
             float3 n = _geometry.normal;
             _geometry.normal = float3(c * n.x + s * n.z, n.y, -s * n.x + c * n.z);
             _geometry.color = float4(fo_hue(_geometry.color.r + fo_hue_shift), 1.0);
-            """
+            """)
         return FlyingShape(geometry: mesh.geometry(extent: 1.15), shader: shader, extent: 1.15)
     }
 
@@ -215,15 +231,10 @@ enum FlyingShapes {
                 }
             }
         }
-        let shader = """
-            \(hueFunction)
-            #pragma arguments
-            float fo_time;
-            float fo_hue_shift;
-            #pragma body
+        let shader = animated(functions: hueFunction, body: """
             float3 center = (_geometry.color.rgb - 0.5) * \(2 * radius);
             float seed = _geometry.color.a;
-            float cycle = fract(fo_time * 0.12);
+            float cycle = fract(fo_time * \(burstsPerLoop / loopLength));
             float burst = smoothstep(0.0, 0.25, cycle) * (1.0 - smoothstep(0.55, 0.85, cycle));
             float3 axis = normalize(cross(center, float3(0.3, 1.0, 0.2)) + float3(0.001));
             float angle = burst * (seed - 0.5) * 9.0;
@@ -236,7 +247,7 @@ enum FlyingShapes {
             _geometry.position.xyz = center * (1.0 + burst * (0.4 + 0.6 * seed)) + local;
             _geometry.normal = n;
             _geometry.color = float4(fo_hue(0.35 * center.y + 0.5 + fo_hue_shift), 1.0);
-            """
+            """)
         return FlyingShape(geometry: mesh.geometry(extent: 1.6), shader: shader, extent: 1.6)
     }
 }
@@ -282,7 +293,9 @@ private struct MeshBuilder {
         }
     }
 
-    /// The shaders move the vertices, so tell SceneKit the whole space the shape can reach.
+    /// The shaders move the vertices, so tell SceneKit the whole space the shape can reach. That
+    /// includes the clock node's offset, which the shader takes back out: up to about 2.3 units at
+    /// the smallest size.
     func geometry(extent: Float) -> SCNGeometry {
         let colorSource = SCNGeometrySource(
             data: colors.withUnsafeBytes { Data($0) }, semantic: .color, vectorCount: colors.count,
@@ -298,7 +311,8 @@ private struct MeshBuilder {
             ],
             elements: [SCNGeometryElement(indices: indices, primitiveType: .triangles)]
         )
-        geometry.boundingBox = (min: SCNVector3(-extent, -extent, -extent), max: SCNVector3(extent, extent, extent))
+        let reach = extent + 3
+        geometry.boundingBox = (min: SCNVector3(-reach, -reach, -reach), max: SCNVector3(reach, reach, reach))
         return geometry
     }
 }
