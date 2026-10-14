@@ -27,4 +27,4 @@ For snapshots, use `make snapshot SAVER=Text3D ARGS="…"`:
 - `Text3DScene.swift`: the text (SceneKit's `SCNText`, with a small bevel), the rotation styles, the surfaces, and the chrome environment. Chrome reflects a generated cube map: a deep blue sky, a white horizon, a dark floor, and two studio lights that glint as the text turns. Textures are projected straight onto the letters by a small shader, since `SCNText`'s own texture coordinates smear them.
 - `Text3DSaverView.swift`, `Text3DOptions.swift`, `Text3DSettings.swift`: the view, the Options sheet, and the saved settings.
 
-The text only changes when you change it (or once a second for the time), so a frame is mostly just a new rotation. It uses about 3% of one CPU core at 60 fps (see `make perf`).
+The text only changes when you change it (or once a second for the time), so a frame is mostly just a new rotation. See `make perf` for what it costs.

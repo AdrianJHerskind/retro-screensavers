@@ -25,7 +25,7 @@ For snapshots, use `make snapshot SAVER=Maze ARGS="…"`:
 ## Code
 
 - `MazeLayout.swift`: the maze (a randomised depth-first search), the start and finish, and the right-hand rule.
-- `MazeScene.swift`: building each maze, the walk, the rats, the flips, and the fades between mazes. The walls, floor and ceiling are built once per maze, all the walls as a single mesh, so a frame only moves the camera, the rats and the spinning shapes. It uses about 5% of one CPU core at 60 fps (see `make perf`).
+- `MazeScene.swift`: building each maze, the walk, the rats, the flips, and the fades between mazes. The walls, floor and ceiling are built once per maze, all the walls as a single mesh, so a frame only moves the camera, the rats and the spinning shapes. See `make perf` for what it costs.
 - `MazeModels.swift`: the rat, the flipper, the smiley, and the quad builder for walls, floor and ceiling.
 - `MazeTextures.swift`: the brick, wood floor and ceiling tile textures and the smiley, generated in code.
 - `MazeMap.swift`: the overlay map.

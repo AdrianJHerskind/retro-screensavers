@@ -75,16 +75,19 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
 
 These should run as lightly as the originals did on 90s hardware. Every saver declares the frame rate it needs (Pipes 30 fps, since only its pipe tips move; Flower Box 60 fps, since the whole object keeps moving). On battery or in Low Power Mode, all of them drop to at most 30 fps, and go back up when the Mac is plugged in again.
 
-`make perf` runs each saver's test app, skips a warm-up, and measures its CPU time and memory for 30 seconds. It then prints a table and exits with an error if a saver averages more than 20% of one CPU core. On an M3 Pro, plugged in:
+`make perf` runs each saver's test app, skips a warm-up, and measures its CPU time and memory for 30 seconds. It then prints a table and exits with an error if a saver averages more than 20% of one CPU core. On an M3 Pro, plugged in, all in one run:
 
 ```
 Saver          CPU avg  CPU peak      Memory        GPU
-FlowerBox        12.2%     16.6%      291 MB        20%   ok
-Maze              5.0%      5.4%      182 MB        35%   ok
-Pipes             3.8%      5.0%      228 MB        19%   ok
-Starfield         4.7%      9.1%      251 MB        14%   ok
-Text3D            3.1%      4.5%      184 MB        23%   ok
+FlowerBox         8.2%      8.7%      226 MB        21%   ok
+FlyingObjects     9.9%     11.3%      199 MB        20%   ok
+Maze             13.0%     17.8%      147 MB        32%   ok
+Pipes             3.6%      4.7%      213 MB        25%   ok
+Starfield        11.5%     15.6%      203 MB        18%   ok
+Text3D            9.0%     12.5%      147 MB        20%   ok
 ```
+
+CPU % depends a lot on the machine's state and on which cores macOS uses: the same build measured 2–3× apart in different sessions. Compare savers, or a change before and after, only within one run.
 
 `HARNESS_ARGS=--battery make perf` measures the battery frame rates (Flower Box drops to about 5%). Budgets and durations are set with environment variables too, e.g. `CPU_LIMIT=15 MEASURE_SECONDS=60 make perf`. `GPU_LIMIT` adds a GPU budget, but macOS only reports GPU use for the whole system, so close other busy apps first. The test app windows have to stay visible while they're measured. Run it before releasing, or after any change that touches drawing.
 

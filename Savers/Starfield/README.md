@@ -19,5 +19,5 @@ For snapshots, use `make snapshot SAVER=Starfield ARGS="…"`:
 
 ## Code
 
-- `StarfieldScene.swift`: the stars and their flight. All the stars are a single point mesh drawn in one call, and the GPU moves them. Each star keeps a fixed spot and a phase along its flight, and a small shader places it from a shared clock. So per frame the CPU only advances that clock, however many stars there are. It uses about 5% of one CPU core at 60 fps (see `make perf`).
+- `StarfieldScene.swift`: the stars and their flight. All the stars are a single point mesh drawn in one call, and the GPU moves them. Each star keeps a fixed spot and a phase along its flight, and a small shader places it from a shared clock. So per frame the CPU only advances that clock, however many stars there are. See `make perf` for what it costs.
 - `StarfieldSaverView.swift`, `StarfieldOptions.swift`, `StarfieldSettings.swift`: the view, the Options sheet, and the saved settings.

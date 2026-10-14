@@ -2,7 +2,7 @@
 
 A recreation of the classic Windows 3D Pipes. Shiny pipes grow through a deep 3D grid with ball and elbow joints, seen in strong perspective from a slightly different angle each screen. Once the screen fills up, it dissolves to black in random blocks and starts over.
 
-It runs at 30 fps, since only the growing pipe tips move, and merges each finished pipe into one mesh. That keeps it at about 4% of one CPU core (see `make perf`).
+It runs at 30 fps, since only the growing pipe tips move, and merges each finished pipe into one mesh. That keeps it the lightest saver in the collection (see `make perf`).
 
 Built with SceneKit, from scratch: no Microsoft code or artwork. Not affiliated with or endorsed by Microsoft. Windows is a trademark of Microsoft Corporation.
 
