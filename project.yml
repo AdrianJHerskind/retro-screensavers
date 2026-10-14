@@ -94,3 +94,9 @@ targets:
     templates: [Harness]
     templateAttributes:
       saver: Maze
+  FlyingObjects:
+    templates: [ScreenSaver]
+  FlyingObjectsHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: FlyingObjects

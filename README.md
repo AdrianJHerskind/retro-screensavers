@@ -9,6 +9,7 @@ A collection of macOS screen savers recreating classics from the 90s. Each one i
 | [Retro 3D Text](Savers/Text3D/README.md) | The Windows 3D Text: your own words or the current time, extruded in 3D and spinning, rocking, wobbling or tumbling. Chrome, solid color, marble, wood or granite. |
 | [Retro Starfield](Savers/Starfield/README.md) | The Windows Starfield Simulation: flying through a field of stars that stream out of the depths, brightening and growing as they pass. Warp speed and star density. |
 | [Retro 3D Maze](Savers/Maze/README.md) | The Windows 3D Maze: walk through a random brick maze with rats scurrying about and grey spinners that turn the world upside down, until you reach the smiley and a new maze begins. Optional map. |
+| [Retro Flying Objects](Savers/FlyingObjects/README.md) | The Windows 3D Flying Objects: a waving flag (our own designs, not the Windows logo), an exploding sphere, twisting ribbons, a rippling splash or a twisting star column, bouncing around the screen. |
 
 ## Install
 
