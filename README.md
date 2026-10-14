@@ -119,6 +119,10 @@ CPU % depends a lot on the machine's state and on which cores macOS uses: the sa
 
 Local builds are ad-hoc signed, which is enough on this Mac. To give the `.saver` files to other people, sign them with a Developer ID and notarize them; otherwise Gatekeeper blocks them. If you publish your own fork, change `BUNDLE_ID_PREFIX` in `project.yml` to a prefix you own.
 
+## Support
+
+The savers are free. If you enjoy them, you can support their development through [GitHub Sponsors](https://github.com/sponsors/AdrianJHerskind).
+
 ## License
 
 MIT; see [LICENSE](LICENSE).
