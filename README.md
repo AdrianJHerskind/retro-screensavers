@@ -81,13 +81,14 @@ These should run as lightly as the originals did on 90s hardware. Every saver de
 
 ```
 Saver          CPU avg  CPU peak      Memory        GPU
-FlowerBox        11.5%     14.4%      233 MB        47%   ok
-FlyingObjects    10.6%     11.8%      144 MB        48%   ok
-Maze              7.0%      8.6%      141 MB        51%   ok
-Mystify           5.8%      7.8%      136 MB        50%   ok
-Pipes             3.9%      4.8%      242 MB        44%   ok
-Starfield         5.7%      7.3%      136 MB        45%   ok
-Text3D           10.5%     12.0%      200 MB        50%   ok
+DigitalRain       3.0%      4.0%      145 MB        19%   ok
+FlowerBox        12.8%     16.1%      228 MB        23%   ok
+FlyingObjects    10.0%     13.7%      142 MB        26%   ok
+Maze             11.7%     15.3%      143 MB        30%   ok
+Mystify          10.9%     14.9%      139 MB        35%   ok
+Pipes             4.0%      5.4%      218 MB        20%   ok
+Starfield         6.0%      7.4%      136 MB        22%   ok
+Text3D            6.4%      7.0%      141 MB        23%   ok
 ```
 
 CPU % depends a lot on the machine's state and on which cores macOS uses: the same build measured 2–3× apart in different sessions. Compare savers, or a change before and after, only within one run.
