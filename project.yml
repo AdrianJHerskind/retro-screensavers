@@ -106,3 +106,9 @@ targets:
     templates: [Harness]
     templateAttributes:
       saver: Mystify
+  DigitalRain:
+    templates: [ScreenSaver]
+  DigitalRainHarness:
+    templates: [Harness]
+    templateAttributes:
+      saver: DigitalRain
